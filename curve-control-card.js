@@ -527,8 +527,8 @@ class CurveControlCard extends HTMLElement {
     ctx.fillText('$0.5/kWh', canvas.width - padding + 10, padding + chartHeight / 2 + 5);
     ctx.fillText('$0.0/kWh', canvas.width - padding + 10, canvas.height - padding + 5);
     
-    // Draw legend below chart area
-    const legendY = canvas.height - 35;
+    // Draw legend below x-axis labels
+    const legendY = canvas.height - 15;
     ctx.font = '11px sans-serif';
     ctx.textAlign = 'left';
     
@@ -707,9 +707,13 @@ class CurveControlCard extends HTMLElement {
   }
 
   handleDetailedSchedule() {
+    // Get basic settings values (same as basic settings tab)
     const homeSize = parseInt(this.shadowRoot.getElementById('home-size')?.value || 2000);
     const targetTemp = parseFloat(this.shadowRoot.getElementById('target-temp')?.value || 72);
     const location = parseInt(this.shadowRoot.getElementById('location')?.value || 1);
+    const timeAway = this.shadowRoot.getElementById('time-away')?.value || "08:00";
+    const timeHome = this.shadowRoot.getElementById('time-home')?.value || "17:00";
+    const savingsLevel = parseInt(this.shadowRoot.getElementById('savings-level')?.value || 2);
 
     // Build detailed temperature arrays (convert hourly to 30-min intervals)
     const highTemperatures = [];
@@ -731,9 +735,9 @@ class CurveControlCard extends HTMLElement {
       homeSize,
       homeTemperature: targetTemp,
       location,
-      timeAway: "08:00",
-      timeHome: "17:00",
-      savingsLevel: 2,
+      timeAway,
+      timeHome,
+      savingsLevel,
       temperatureSchedule: {
         highTemperatures,
         lowTemperatures,
@@ -742,6 +746,7 @@ class CurveControlCard extends HTMLElement {
       }
     };
 
+    console.log('Sending custom schedule update with data:', data);
     this.callUpdateSchedule(data);
   }
 
