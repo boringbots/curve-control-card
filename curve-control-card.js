@@ -414,8 +414,8 @@ class CurveControlCard extends HTMLElement {
     ctx.stroke();
 
     // Calculate temperature range from data
-    let minTemp = 65;
-    let maxTemp = 80;
+    let minTemp = 0;
+    let maxTemp = 100;
     
     // Find actual min/max from all temperature datasets for better scaling
     const allTempData = [];
@@ -431,7 +431,7 @@ class CurveControlCard extends HTMLElement {
     // Draw high temperature limit line (red dashed)
     if (datasets[1] && datasets[1].data) {
       const highTemps = datasets[1].data;
-      ctx.strokeStyle = 'rgb(255, 99, 132)';
+      ctx.strokeStyle = 'rgba(233, 41, 82, 1)';
       ctx.lineWidth = 2;
       ctx.setLineDash([5, 5]);
       ctx.beginPath();
@@ -454,7 +454,7 @@ class CurveControlCard extends HTMLElement {
     // Draw low temperature limit line (blue dashed)
     if (datasets[2] && datasets[2].data) {
       const lowTemps = datasets[2].data;
-      ctx.strokeStyle = 'rgb(54, 162, 235)';
+      ctx.strokeStyle = 'rgba(31, 141, 214, 1)';
       ctx.lineWidth = 2;
       ctx.setLineDash([5, 5]);
       ctx.beginPath();
@@ -477,7 +477,7 @@ class CurveControlCard extends HTMLElement {
     // Draw optimized target temperature line (green solid)
     if (datasets[0] && datasets[0].data) {
       const temps = datasets[0].data;
-      ctx.strokeStyle = '#4caf50';
+      ctx.strokeStyle = '#278a2bff';
       ctx.lineWidth = 3;
       ctx.beginPath();
       
@@ -498,7 +498,7 @@ class CurveControlCard extends HTMLElement {
     // Draw price bars
     if (datasets[3] && datasets[3].data) {
       const prices = datasets[3].data;
-      const maxPrice = 0.6;
+      const maxPrice = 1.0;
       
       ctx.fillStyle = 'rgba(255, 152, 0, 0.3)';
       
@@ -536,17 +536,17 @@ class CurveControlCard extends HTMLElement {
     ctx.textAlign = 'left';
     
     // Optimized target line
-    ctx.strokeStyle = '#4caf50';
+    ctx.strokeStyle = '#278a2bff';
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.moveTo(canvas.width - 200, legendY);
     ctx.lineTo(canvas.width - 185, legendY);
     ctx.stroke();
-    ctx.fillStyle = '#4caf50';
+    ctx.fillStyle = '#278a2bff';
     ctx.fillText('Target', canvas.width - 180, legendY + 4);
     
     // High limit line
-    ctx.strokeStyle = 'rgb(255, 99, 132)';
+    ctx.strokeStyle = 'rgba(233, 41, 82, 1)';
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 5]);
     ctx.beginPath();
@@ -554,11 +554,11 @@ class CurveControlCard extends HTMLElement {
     ctx.lineTo(canvas.width - 185, legendY + 15);
     ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle = 'rgb(255, 99, 132)';
+    ctx.fillStyle = 'rgba(233, 41, 82, 1)';
     ctx.fillText('High Limit', canvas.width - 180, legendY + 19);
     
     // Low limit line  
-    ctx.strokeStyle = 'rgb(54, 162, 235)';
+    ctx.strokeStyle = 'rgba(31, 141, 214, 1)';
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 5]);
     ctx.beginPath();
@@ -566,7 +566,7 @@ class CurveControlCard extends HTMLElement {
     ctx.lineTo(canvas.width - 185, legendY + 30);
     ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle = 'rgb(54, 162, 235)';
+    ctx.fillStyle = 'rgba(31, 141, 214, 1)';
     ctx.fillText('Low Limit', canvas.width - 180, legendY + 34);
   }
 
