@@ -339,7 +339,8 @@ class CurveControlCard extends HTMLElement {
     // Update Next Temperature
     const nextTempValue = this.shadowRoot.getElementById('next-temp-value');
     if (nextTempValue && nextTempEntity) {
-      nextTempValue.textContent = `${nextTempEntity.state || '--'}°F`;
+      const temp = parseFloat(nextTempEntity.state);
+      nextTempValue.textContent = !isNaN(temp) ? `${temp.toFixed(1)}°F` : '--°F';
     }
 
     // Update status
@@ -641,6 +642,9 @@ class CurveControlCard extends HTMLElement {
 
     container.innerHTML = '';
     
+    // Load saved values from localStorage
+    const savedSchedule = this.loadScheduleFromStorage();
+    
     // Create inputs for each hour (24 hours, but we'll show high/low for each)
     for (let hour = 0; hour < 24; hour++) {
       const hourDiv = document.createElement('div');
@@ -656,8 +660,11 @@ class CurveControlCard extends HTMLElement {
       highInput.min = '65';
       highInput.max = '85';
       highInput.step = '0.5';
-      highInput.value = '75';
+      highInput.value = savedSchedule ? savedSchedule.high[hour] || '75' : '75';
       highInput.id = `high-${hour}`;
+      
+      // Save on change
+      highInput.addEventListener('change', () => this.saveScheduleToStorage());
       
       const lowInput = document.createElement('input');
       lowInput.type = 'number';
@@ -666,8 +673,11 @@ class CurveControlCard extends HTMLElement {
       lowInput.min = '65';
       lowInput.max = '85';
       lowInput.step = '0.5';
-      lowInput.value = '69';
+      lowInput.value = savedSchedule ? savedSchedule.low[hour] || '69' : '69';
       lowInput.id = `low-${hour}`;
+      
+      // Save on change
+      lowInput.addEventListener('change', () => this.saveScheduleToStorage());
       
       hourDiv.appendChild(label);
       hourDiv.appendChild(highInput);
@@ -767,6 +777,41 @@ class CurveControlCard extends HTMLElement {
       
       if (highInput) highInput.value = '75';
       if (lowInput) lowInput.value = '69';
+    }
+    // Clear saved data and save defaults
+    this.saveScheduleToStorage();
+  }
+
+  loadScheduleFromStorage() {
+    try {
+      const saved = localStorage.getItem('curve-control-custom-schedule');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      console.warn('Failed to load saved schedule:', e);
+      return null;
+    }
+  }
+
+  saveScheduleToStorage() {
+    try {
+      const schedule = {
+        high: [],
+        low: [],
+        lastSaved: new Date().toISOString()
+      };
+      
+      for (let hour = 0; hour < 24; hour++) {
+        const highInput = this.shadowRoot.getElementById(`high-${hour}`);
+        const lowInput = this.shadowRoot.getElementById(`low-${hour}`);
+        
+        schedule.high[hour] = highInput ? highInput.value : '75';
+        schedule.low[hour] = lowInput ? lowInput.value : '69';
+      }
+      
+      localStorage.setItem('curve-control-custom-schedule', JSON.stringify(schedule));
+      console.log('Custom schedule saved to localStorage');
+    } catch (e) {
+      console.warn('Failed to save schedule:', e);
     }
   }
 
