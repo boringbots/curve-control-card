@@ -201,7 +201,17 @@ class CurveControlCard extends HTMLElement {
             <div class="status-row">
               <div class="status-item">
                 <div class="status-value" id="savings-value">--</div>
-                <div class="status-label">Savings</div>
+                <div class="status-label">Energy Savings</div>
+              </div>
+              <div class="status-item">
+                <div class="status-value" id="co2-value">--</div>
+                <div class="status-label">CO2 Avoided</div>
+              </div>
+            </div>
+            <div class="status-row">
+              <div class="status-item">
+                <div class="status-value" id="next-temp-value">--</div>
+                <div class="status-label">Next Temperature</div>
               </div>
               <div class="status-item">
                 <div class="status-value" id="status-value">--</div>
@@ -290,6 +300,8 @@ class CurveControlCard extends HTMLElement {
     const savingsEntity = this._hass.states['sensor.curve_control_energy_optimizer_savings'];
     const statusEntity = this._hass.states['sensor.curve_control_energy_optimizer_status'];
     const chartEntity = this._hass.states['sensor.curve_control_energy_optimizer_temperature_schedule_chart'];
+    const co2Entity = this._hass.states['sensor.curve_control_energy_optimizer_co2_avoided'];
+    const nextTempEntity = this._hass.states['sensor.curve_control_energy_optimizer_next_temperature_setpoint'];
 
     // Update toggle
     const toggle = this.shadowRoot.getElementById('optimization-toggle');
@@ -316,6 +328,18 @@ class CurveControlCard extends HTMLElement {
     const savingsValue = this.shadowRoot.getElementById('savings-value');
     if (savingsValue && savingsEntity) {
       savingsValue.textContent = `$${savingsEntity.state || '0'}`;
+    }
+
+    // Update CO2 Avoided
+    const co2Value = this.shadowRoot.getElementById('co2-value');
+    if (co2Value && co2Entity) {
+      co2Value.textContent = `${co2Entity.state || '0'} metric tons`;
+    }
+
+    // Update Next Temperature
+    const nextTempValue = this.shadowRoot.getElementById('next-temp-value');
+    if (nextTempValue && nextTempEntity) {
+      nextTempValue.textContent = `${nextTempEntity.state || '--'}°F`;
     }
 
     // Update status
