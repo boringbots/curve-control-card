@@ -189,7 +189,7 @@ class CurveControlCard extends HTMLElement {
           <div class="tabs">
             <button class="tab active" data-tab="display">Dashboard</button>
             <button class="tab" data-tab="basic">Basic Settings</button>
-            <button class="tab" data-tab="detailed">Detailed Schedule</button>
+            <button class="tab" data-tab="detailed">Custom Hourly Comfort Ranges</button>
           </div>
 
           <!-- Dashboard Tab -->
@@ -265,7 +265,7 @@ class CurveControlCard extends HTMLElement {
           <!-- Detailed Schedule Tab -->
           <div class="tab-content" id="detailed-tab">
             <div class="input-group">
-              <label>Custom Temperature Schedule (24 hours)</label>
+              <label>Detailed Comfort Preferences (24 hours)</label>
               <div class="detailed-schedule" id="detailed-schedule">
                 <!-- Will be populated by JavaScript -->
               </div>
@@ -286,10 +286,10 @@ class CurveControlCard extends HTMLElement {
   updateCard() {
     if (!this._hass) return;
 
-    const switchEntity = this._hass.states['switch.curve_control_use_optimized_temperatures'];
-    const savingsEntity = this._hass.states['sensor.curve_control_savings'];
-    const statusEntity = this._hass.states['sensor.curve_control_status'];
-    const chartEntity = this._hass.states['sensor.curve_control_temperature_schedule_chart'];
+    const switchEntity = this._hass.states['switch.curve_control_energy_optimizer_use_optimized_temperatures'];
+    const savingsEntity = this._hass.states['sensor.curve_control_energy_optimizer_savings'];
+    const statusEntity = this._hass.states['sensor.curve_control_energy_optimizer_status'];
+    const chartEntity = this._hass.states['sensor.curve_control_energy_optimizer_temperature_schedule_chart'];
 
     // Update toggle
     const toggle = this.shadowRoot.getElementById('optimization-toggle');
@@ -305,7 +305,7 @@ class CurveControlCard extends HTMLElement {
       toggle._curveControlHandler = () => {
         const currentState = switchEntity.state === 'on';
         this._hass.callService('switch', currentState ? 'turn_off' : 'turn_on', {
-          entity_id: 'switch.curve_control_use_optimized_temperatures'
+          entity_id: 'switch.curve_control_energy_optimizer_use_optimized_temperatures'
         });
       };
       
@@ -334,7 +334,7 @@ class CurveControlCard extends HTMLElement {
       this.shadowRoot.getElementById('schedule-chart').style.display = 'block';
     } else {
       // Check if optimization is pending
-      const statusEntity = this._hass.states['sensor.curve_control_status'];
+      const statusEntity = this._hass.states['sensor.curve_control_energy_optimizer_status'];
       const noDataDiv = this.shadowRoot.getElementById('no-data');
       
       if (statusEntity && statusEntity.state === 'Pending') {
@@ -350,7 +350,7 @@ class CurveControlCard extends HTMLElement {
   
   isDataPending(hass) {
     if (!hass) return false;
-    const statusSensor = hass.states['sensor.curve_control_status'];
+    const statusSensor = hass.states['sensor.curve_control_energy_optimizer_status'];
     return statusSensor && statusSensor.state === 'Pending';
   }
   
