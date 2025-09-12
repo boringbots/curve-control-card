@@ -526,51 +526,54 @@ class CurveControlCard extends HTMLElement {
     ctx.fillText('$0.5/kWh', canvas.width - padding + 10, padding + chartHeight / 2 + 5);
     ctx.fillText('$0.0/kWh', canvas.width - padding + 10, canvas.height - padding + 5);
     
-    // Draw legend
-    const legendY = padding + 10;
-    const legendSpacing = 80;
+    // Draw legend below chart area
+    const legendY = canvas.height - 35;
     ctx.font = '11px sans-serif';
     ctx.textAlign = 'left';
+    
+    // Calculate spacing for horizontal layout
+    const legendItemWidth = 90;
+    const startX = (canvas.width - (4 * legendItemWidth)) / 2; // Center the legend
     
     // Optimized target line
     ctx.strokeStyle = '#278a2bff';
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(canvas.width - 200, legendY);
-    ctx.lineTo(canvas.width - 185, legendY);
+    ctx.moveTo(startX, legendY);
+    ctx.lineTo(startX + 15, legendY);
     ctx.stroke();
     ctx.fillStyle = '#278a2bff';
-    ctx.fillText('Target', canvas.width - 180, legendY + 4);
+    ctx.fillText('Target', startX + 20, legendY + 4);
     
     // High limit line
     ctx.strokeStyle = 'rgba(233, 41, 82, 1)';
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 5]);
     ctx.beginPath();
-    ctx.moveTo(canvas.width - 200, legendY + 15);
-    ctx.lineTo(canvas.width - 185, legendY + 15);
+    ctx.moveTo(startX + legendItemWidth, legendY);
+    ctx.lineTo(startX + legendItemWidth + 15, legendY);
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.fillStyle = 'rgba(233, 41, 82, 1)';
-    ctx.fillText('High Limit', canvas.width - 180, legendY + 19);
+    ctx.fillText('High Limit', startX + legendItemWidth + 20, legendY + 4);
     
     // Low limit line  
     ctx.strokeStyle = 'rgba(31, 141, 214, 1)';
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 5]);
     ctx.beginPath();
-    ctx.moveTo(canvas.width - 200, legendY + 30);
-    ctx.lineTo(canvas.width - 185, legendY + 30);
+    ctx.moveTo(startX + 2 * legendItemWidth, legendY);
+    ctx.lineTo(startX + 2 * legendItemWidth + 15, legendY);
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.fillStyle = 'rgba(31, 141, 214, 1)';
-    ctx.fillText('Low Limit', canvas.width - 180, legendY + 34);
+    ctx.fillText('Low Limit', startX + 2 * legendItemWidth + 20, legendY + 4);
     
     // Price bars
     ctx.fillStyle = 'rgba(255, 152, 0, 0.6)';
-    ctx.fillRect(canvas.width - 200, legendY + 42, 15, 8);
+    ctx.fillRect(startX + 3 * legendItemWidth, legendY - 4, 15, 8);
     ctx.fillStyle = 'rgba(255, 152, 0, 1)';
-    ctx.fillText('Price ($/kWh)', canvas.width - 180, legendY + 49);
+    ctx.fillText('Price ($/kWh)', startX + 3 * legendItemWidth + 20, legendY + 4);
   }
 
   setupEventListeners() {
