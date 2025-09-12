@@ -297,8 +297,8 @@ class CurveControlCard extends HTMLElement {
     if (!this._hass) return;
 
     const switchEntity = this._hass.states['switch.curve_control_energy_optimizer_use_optimized_temperatures'];
-    const savingsEntity = this._hass.states['sensor.curve_control_energy_optimizer_savings'];
-    const statusEntity = this._hass.states['sensor.curve_control_energy_optimizer_status'];
+    const savingsEntity = this._hass.states['sensor.curve_control_energy_optimizer_energy_savings'];
+    const statusEntity = this._hass.states['sensor.curve_control_energy_optimizer_optimization_status'];
     const chartEntity = this._hass.states['sensor.curve_control_energy_optimizer_temperature_schedule_chart'];
     const co2Entity = this._hass.states['sensor.curve_control_energy_optimizer_co2_avoided'];
     const nextTempEntity = this._hass.states['sensor.curve_control_energy_optimizer_next_temperature_setpoint'];
@@ -413,20 +413,9 @@ class CurveControlCard extends HTMLElement {
     ctx.lineTo(canvas.width - padding, canvas.height - padding);
     ctx.stroke();
 
-    // Calculate temperature range from data
-    let minTemp = 0;
-    let maxTemp = 100;
-    
-    // Find actual min/max from all temperature datasets for better scaling
-    const allTempData = [];
-    if (datasets[0]?.data) allTempData.push(...datasets[0].data); // Target temps
-    if (datasets[1]?.data) allTempData.push(...datasets[1].data); // High limits  
-    if (datasets[2]?.data) allTempData.push(...datasets[2].data); // Low limits
-    
-    if (allTempData.length > 0) {
-      minTemp = Math.min(...allTempData) - 2;
-      maxTemp = Math.max(...allTempData) + 2;
-    }
+    // Fixed temperature range
+    const minTemp = 0;
+    const maxTemp = 100;
 
     // Draw high temperature limit line (red dashed)
     if (datasets[1] && datasets[1].data) {
@@ -498,6 +487,7 @@ class CurveControlCard extends HTMLElement {
     // Draw price bars
     if (datasets[3] && datasets[3].data) {
       const prices = datasets[3].data;
+      const minPrice = 0;
       const maxPrice = 1.0;
       
       ctx.fillStyle = 'rgba(255, 152, 0, 0.3)';
@@ -523,11 +513,18 @@ class CurveControlCard extends HTMLElement {
       ctx.fillText(`${i}:00`, x, canvas.height - padding + 20);
     }
     
-    // Y-axis labels (dynamic based on actual temperature range)
+    // Temperature Y-axis labels (left side)
     ctx.textAlign = 'right';
-    ctx.fillText(`${maxTemp.toFixed(0)}°F`, padding - 10, padding);
-    ctx.fillText(`${((minTemp + maxTemp) / 2).toFixed(0)}°F`, padding - 10, padding + chartHeight / 2);
-    ctx.fillText(`${minTemp.toFixed(0)}°F`, padding - 10, canvas.height - padding);
+    ctx.fillStyle = '#666';
+    ctx.fillText(`${maxTemp}°F`, padding - 10, padding + 5);
+    ctx.fillText(`${(minTemp + maxTemp) / 2}°F`, padding - 10, padding + chartHeight / 2 + 5);
+    ctx.fillText(`${minTemp}°F`, padding - 10, canvas.height - padding + 5);
+    
+    // Price Y-axis labels (right side) 
+    ctx.textAlign = 'left';
+    ctx.fillText('$1.0/kWh', canvas.width - padding + 10, padding + 5);
+    ctx.fillText('$0.5/kWh', canvas.width - padding + 10, padding + chartHeight / 2 + 5);
+    ctx.fillText('$0.0/kWh', canvas.width - padding + 10, canvas.height - padding + 5);
     
     // Draw legend
     const legendY = padding + 10;
@@ -568,6 +565,12 @@ class CurveControlCard extends HTMLElement {
     ctx.setLineDash([]);
     ctx.fillStyle = 'rgba(31, 141, 214, 1)';
     ctx.fillText('Low Limit', canvas.width - 180, legendY + 34);
+    
+    // Price bars
+    ctx.fillStyle = 'rgba(255, 152, 0, 0.6)';
+    ctx.fillRect(canvas.width - 200, legendY + 42, 15, 8);
+    ctx.fillStyle = 'rgba(255, 152, 0, 1)';
+    ctx.fillText('Price ($/kWh)', canvas.width - 180, legendY + 49);
   }
 
   setupEventListeners() {
