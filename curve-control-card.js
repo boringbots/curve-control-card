@@ -694,6 +694,14 @@ class CurveControlCard extends HTMLElement {
     const timeHome = this.shadowRoot.getElementById('time-home').value;
     const savingsLevel = parseInt(this.shadowRoot.getElementById('savings-level').value);
 
+    console.log('DEBUG: Basic Settings Form Values:');
+    console.log('- homeSize:', homeSize);
+    console.log('- targetTemp:', targetTemp);
+    console.log('- location:', location);
+    console.log('- timeAway:', timeAway);
+    console.log('- timeHome:', timeHome);
+    console.log('- savingsLevel:', savingsLevel);
+
     const data = {
       homeSize,
       homeTemperature: targetTemp,
@@ -703,6 +711,7 @@ class CurveControlCard extends HTMLElement {
       savingsLevel
     };
 
+    console.log('DEBUG: Sending basic settings data:', data);
     this.callUpdateSchedule(data);
   }
 
@@ -714,6 +723,14 @@ class CurveControlCard extends HTMLElement {
     const timeAway = this.shadowRoot.getElementById('time-away')?.value || "08:00";
     const timeHome = this.shadowRoot.getElementById('time-home')?.value || "17:00";
     const savingsLevel = parseInt(this.shadowRoot.getElementById('savings-level')?.value || 2);
+
+    console.log('DEBUG: Custom Schedule Form Values:');
+    console.log('- homeSize:', homeSize);
+    console.log('- targetTemp:', targetTemp);
+    console.log('- location:', location);
+    console.log('- timeAway:', timeAway);
+    console.log('- timeHome:', timeHome);
+    console.log('- savingsLevel:', savingsLevel);
 
     // Build detailed temperature arrays (convert hourly to 30-min intervals)
     const highTemperatures = [];
@@ -746,7 +763,10 @@ class CurveControlCard extends HTMLElement {
       }
     };
 
-    console.log('Sending custom schedule update with data:', data);
+    console.log('DEBUG: Custom temperature schedule sample (first 4 hours):');
+    console.log('- High temps:', highTemperatures.slice(0, 8));
+    console.log('- Low temps:', lowTemperatures.slice(0, 8));
+    console.log('DEBUG: Complete data being sent:', data);
     this.callUpdateSchedule(data);
   }
 
