@@ -490,7 +490,9 @@ class CurveControlCard extends HTMLElement {
     if (datasets[3] && datasets[3].data) {
       const prices = datasets[3].data;
       const minPrice = 0;
-      const maxPrice = 1.5;
+      // Dynamic max price based on location
+      const location = parseInt(this.shadowRoot.getElementById('location')?.value || 1);
+      const maxPrice = location === 8 ? 1.6 : 1.0;
       
       ctx.fillStyle = 'rgba(255, 152, 0, 0.3)';
       
