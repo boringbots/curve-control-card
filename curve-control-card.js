@@ -246,6 +246,7 @@ class CurveControlCard extends HTMLElement {
                 <option value="5">San Diego Gas & Electric Standard DR</option>
                 <option value="6">New Hampshire TOU Whole House</option>
                 <option value="7">Texas XCEL Time-Of-Use</option>
+                <option value="8">NYC ConEdison Residential TOU</option>
               </select>
             </div>
             <div class="input-row">
@@ -489,7 +490,7 @@ class CurveControlCard extends HTMLElement {
     if (datasets[3] && datasets[3].data) {
       const prices = datasets[3].data;
       const minPrice = 0;
-      const maxPrice = 1.0;
+      const maxPrice = 1.5;
       
       ctx.fillStyle = 'rgba(255, 152, 0, 0.3)';
       
