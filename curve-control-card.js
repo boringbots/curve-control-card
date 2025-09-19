@@ -96,6 +96,18 @@ class CurveControlCard extends HTMLElement {
             padding: 32px;
             color: var(--secondary-text-color);
           }
+          .chart-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+            max-width: 200px;
+          }
           ha-switch {
             --mdc-theme-secondary: var(--switch-checked-color);
           }
@@ -220,6 +232,7 @@ class CurveControlCard extends HTMLElement {
             </div>
             <div class="chart-container">
               <canvas id="schedule-chart"></canvas>
+              <div id="chart-tooltip" class="chart-tooltip"></div>
               <div id="no-data" class="no-data" style="display:none;">
                 No schedule data available. Optimization will run at midnight or when you update preferences.
               </div>
@@ -394,6 +407,17 @@ class CurveControlCard extends HTMLElement {
     canvas.width = rect.width;
     canvas.height = rect.height;
 
+    // Store chart data for hover functionality
+    this.chartData = {
+      graphData,
+      padding: 40,
+      chartWidth: canvas.width - 80,
+      chartHeight: canvas.height - 80,
+      minTemp: 0,
+      maxTemp: 100,
+      canvas
+    };
+
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -490,9 +514,9 @@ class CurveControlCard extends HTMLElement {
     if (datasets[3] && datasets[3].data) {
       const prices = datasets[3].data;
       const minPrice = 0;
-      // Dynamic max price based on location
+      // Dynamic max price based on location (prices are in cents per kWh)
       const location = parseInt(this.shadowRoot.getElementById('location')?.value || 1);
-      const maxPrice = location === 8 ? 1.6 : 1.0;
+      const maxPrice = location === 8 ? 160 : 100;
       
       ctx.fillStyle = 'rgba(255, 152, 0, 0.3)';
       
@@ -524,21 +548,30 @@ class CurveControlCard extends HTMLElement {
     ctx.fillText(`${(minTemp + maxTemp) / 2}°F`, padding - 10, padding + chartHeight / 2 + 5);
     ctx.fillText(`${minTemp}°F`, padding - 10, canvas.height - padding + 5);
     
-    // Price Y-axis labels (right side) 
+    // Price Y-axis labels (right side)
     ctx.textAlign = 'left';
-    ctx.fillText('$1.0/kWh', canvas.width - padding + 10, padding + 5);
-    ctx.fillText('$0.5/kWh', canvas.width - padding + 10, padding + chartHeight / 2 + 5);
-    ctx.fillText('$0.0/kWh', canvas.width - padding + 10, canvas.height - padding + 5);
+    const location = parseInt(this.shadowRoot.getElementById('location')?.value || 1);
+    const maxPrice = location === 8 ? 160 : 100;
+    ctx.fillText(`${maxPrice}¢/kWh`, canvas.width - padding + 10, padding + 5);
+    ctx.fillText(`${maxPrice/2}¢/kWh`, canvas.width - padding + 10, padding + chartHeight / 2 + 5);
+    ctx.fillText('0¢/kWh', canvas.width - padding + 10, canvas.height - padding + 5);
     
-    // Draw legend below x-axis labels
+    // Draw legend below x-axis labels with current values
     const legendY = canvas.height - 15;
     ctx.font = '11px sans-serif';
     ctx.textAlign = 'left';
-    
+
+    // Get current interval values for display
+    const currentInterval = graphData.current_interval || 0;
+    const currentTarget = datasets[0] && datasets[0].data ? datasets[0].data[currentInterval] || '--' : '--';
+    const currentHigh = datasets[1] && datasets[1].data ? datasets[1].data[currentInterval] || '--' : '--';
+    const currentLow = datasets[2] && datasets[2].data ? datasets[2].data[currentInterval] || '--' : '--';
+    const currentPrice = datasets[3] && datasets[3].data ? datasets[3].data[currentInterval] || '--' : '--';
+
     // Calculate spacing for horizontal layout
-    const legendItemWidth = 90;
-    const startX = (canvas.width - (4 * legendItemWidth)) / 2; // Center the legend
-    
+    const legendItemWidth = 110;
+    const startX = Math.max(10, (canvas.width - (4 * legendItemWidth)) / 2); // Center the legend
+
     // Optimized target line
     ctx.strokeStyle = '#278a2bff';
     ctx.lineWidth = 3;
@@ -547,8 +580,9 @@ class CurveControlCard extends HTMLElement {
     ctx.lineTo(startX + 15, legendY);
     ctx.stroke();
     ctx.fillStyle = '#278a2bff';
-    ctx.fillText('Target', startX + 20, legendY + 4);
-    
+    const targetText = typeof currentTarget === 'number' ? `Target: ${currentTarget.toFixed(1)}°F` : 'Target: --°F';
+    ctx.fillText(targetText, startX + 20, legendY + 4);
+
     // High limit line
     ctx.strokeStyle = 'rgba(233, 41, 82, 1)';
     ctx.lineWidth = 2;
@@ -559,9 +593,10 @@ class CurveControlCard extends HTMLElement {
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.fillStyle = 'rgba(233, 41, 82, 1)';
-    ctx.fillText('High Limit', startX + legendItemWidth + 20, legendY + 4);
-    
-    // Low limit line  
+    const highText = typeof currentHigh === 'number' ? `High: ${currentHigh.toFixed(1)}°F` : 'High: --°F';
+    ctx.fillText(highText, startX + legendItemWidth + 20, legendY + 4);
+
+    // Low limit line
     ctx.strokeStyle = 'rgba(31, 141, 214, 1)';
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 5]);
@@ -571,13 +606,98 @@ class CurveControlCard extends HTMLElement {
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.fillStyle = 'rgba(31, 141, 214, 1)';
-    ctx.fillText('Low Limit', startX + 2 * legendItemWidth + 20, legendY + 4);
-    
+    const lowText = typeof currentLow === 'number' ? `Low: ${currentLow.toFixed(1)}°F` : 'Low: --°F';
+    ctx.fillText(lowText, startX + 2 * legendItemWidth + 20, legendY + 4);
+
     // Price bars
     ctx.fillStyle = 'rgba(255, 152, 0, 0.6)';
     ctx.fillRect(startX + 3 * legendItemWidth, legendY - 4, 15, 8);
     ctx.fillStyle = 'rgba(255, 152, 0, 1)';
-    ctx.fillText('Price ($/kWh)', startX + 3 * legendItemWidth + 20, legendY + 4);
+    const priceText = typeof currentPrice === 'number' ? `Price: ${currentPrice.toFixed(1)}¢/kWh` : 'Price: --¢/kWh';
+    ctx.fillText(priceText, startX + 3 * legendItemWidth + 20, legendY + 4);
+
+    // Setup hover functionality
+    this.setupChartHover();
+  }
+
+  setupChartHover() {
+    const canvas = this.shadowRoot.getElementById('schedule-chart');
+    const tooltip = this.shadowRoot.getElementById('chart-tooltip');
+
+    if (!canvas || !tooltip || !this.chartData) return;
+
+    // Remove existing listeners to prevent duplicates
+    canvas.onmousemove = null;
+    canvas.onmouseleave = null;
+
+    canvas.onmousemove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      // Check if we're within the chart area
+      const { padding, chartWidth, chartHeight } = this.chartData;
+      if (x < padding || x > padding + chartWidth || y < padding || y > padding + chartHeight) {
+        tooltip.style.display = 'none';
+        return;
+      }
+
+      // Calculate which time interval we're hovering over
+      const relativeX = x - padding;
+      const timeIndex = Math.floor((relativeX / chartWidth) * 48); // 48 30-minute intervals
+
+      if (timeIndex >= 0 && timeIndex < 48) {
+        this.showTooltip(tooltip, timeIndex, x, y);
+      } else {
+        tooltip.style.display = 'none';
+      }
+    };
+
+    canvas.onmouseleave = () => {
+      tooltip.style.display = 'none';
+    };
+  }
+
+  showTooltip(tooltip, timeIndex, mouseX, mouseY) {
+    if (!this.chartData || !this.chartData.graphData) return;
+
+    const { graphData } = this.chartData;
+    const datasets = graphData.datasets;
+
+    // Calculate time from index
+    const hour = Math.floor(timeIndex / 2);
+    const minute = (timeIndex % 2) * 30;
+    const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+
+    // Get values for this time
+    const target = datasets[0] && datasets[0].data ? datasets[0].data[timeIndex] : null;
+    const high = datasets[1] && datasets[1].data ? datasets[1].data[timeIndex] : null;
+    const low = datasets[2] && datasets[2].data ? datasets[2].data[timeIndex] : null;
+    const price = datasets[3] && datasets[3].data ? datasets[3].data[timeIndex] : null;
+
+    // Build tooltip content
+    let content = `<strong>Time: ${timeStr}</strong><br>`;
+
+    if (typeof target === 'number') {
+      content += `Target: ${target.toFixed(1)}°F<br>`;
+    }
+    if (typeof high === 'number') {
+      content += `High Limit: ${high.toFixed(1)}°F<br>`;
+    }
+    if (typeof low === 'number') {
+      content += `Low Limit: ${low.toFixed(1)}°F<br>`;
+    }
+    if (typeof price === 'number') {
+      content += `Price: ${price.toFixed(1)}¢/kWh`;
+    }
+
+    tooltip.innerHTML = content;
+    tooltip.style.display = 'block';
+
+    // Position tooltip
+    const rect = this.chartData.canvas.getBoundingClientRect();
+    tooltip.style.left = (mouseX + 10) + 'px';
+    tooltip.style.top = (mouseY - 10) + 'px';
   }
 
   setupEventListeners() {
